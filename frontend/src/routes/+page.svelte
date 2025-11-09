@@ -5,6 +5,7 @@
   import { page } from '$app/stores';
   import { base, assets } from '$app/paths';
   import { calculator, data } from '../lib/types';
+  import { parseTimelessJewel } from '../lib/parser';
 
   const searchParams = $page.url.searchParams;
 
@@ -68,7 +69,26 @@
       goto($page.url.pathname + '?' + resultQuery);
     }
   };
+
+  const onPaste = (event: ClipboardEvent) => {
+    if (event.type !== 'paste') {
+      return;
+    }
+
+    const paste = (event.clipboardData || window.clipboardData).getData('text/plain');
+    let jewel = parseTimelessJewel(paste)
+    if (!jewel) {
+      return;
+    }
+
+    seed = jewel.seed;
+    selectedJewel = jewel.type;
+    selectedConqueror = jewel.conqueror;
+    updateUrl();
+  };
 </script>
+
+<svelte:window on:paste={onPaste} />
 
 <div class="py-10 flex flex-row justify-center w-screen h-screen">
   <div class="flex flex-col justify-between w-1/3">
@@ -81,8 +101,7 @@
 
       <div class="themed">
         <h3 class="mb-2">Timeless Jewel</h3>
-        <Select items={jewels} bind:value={selectedJewel} on:select={updateUrl} />
-
+        <Select items={jewels} bind:value={selectedJewel} on:select={updateUrl} placeholder="Please select or Paste from clipboard..." />
         {#if selectedJewel}
           <div class="mt-4">
             <h3 class="mb-2">Conqueror</h3>
